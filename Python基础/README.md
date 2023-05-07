@@ -35,3 +35,69 @@ e. 新式类增加了\__slots__属性，可以把实例属性的种类锁定到s
 
 ### 4.python如何实现单例模式，并写出实现方式？
 
+a. 第一种方式：使用装饰器
+
+```python
+def singleton(cls):
+    instances = {}
+
+    def wrapper(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+
+    return wrapper
+
+
+@singleton
+class Foo(object):
+    pass
+
+
+foo1 = Foo()
+foo2 = Foo()
+print(foo1 is foo2)
+```
+
+b. 第二种方法：因为\__new__方法是真正用来创建实例的，所以可以重写父类的new方法来实现单例
+
+```python
+class Singleton(object):
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+
+
+class Foo(Singleton):
+    pass
+
+
+foo1 = Foo()
+foo2 = Foo()
+print(foo1 is foo2)
+```
+
+c. 第三种方法：调用实例对象实际上是调用了类中的\__call__方法，那么使用类创建实例时就是在调用类，即调用了元类的call方法，因为元类时创建类的类，这样就可以通过修改元类的call方法来实现单例
+
+```python
+class Singleton(type):
+    _instance = None
+
+    def __call__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instance
+
+
+class Foo(metaclass=Singleton):
+    pass
+
+
+foo1 = Foo()
+foo2 = Foo()
+print(foo1 is foo2)
+```
+
